@@ -1,0 +1,67 @@
+### ✅ 1. User Stories IMPLEMENTADAS Y FUNCIONANDO
+  • User Story #3: Crear snippet en editor
+      • Estado: Funcionando.
+      • Detalle: Desde el botón "Add Snippet" en la UI se abre el modal con el editor embebido (react-simple-code-editor), se ingresa el nombre y código, y se guarda
+      en el servicio de assets y base de datos.
+  • User Story #4: Actualizar snippet en editor
+      • Estado: Funcionando.
+      • Detalle: En la pantalla de detalle (SnippetDetail), se puede modificar el código directamente en el editor y hacer clic en el botón de guardar (Save changes),
+      actualizando el asset en el backend.
+  • User Story #6: Visualización de un snippet
+      • Estado: Funcionando.
+      • Detalle: Al hacer clic en cualquier fila de la tabla de la Home, se abre el panel lateral (Drawer) con el nombre, versión, lenguaje y el código completo del
+      snippet recuperado desde el asset-service.
+
+  • User Story #11: Habilitar reglas de formatting de un snippet
+      • Estado: Funcionando.
+      • Detalle: La pantalla /rules carga las reglas de formateo oficiales, permite modificarlas/activarlas/desactivarlas y guardarlas en Postgres. Además, el botón
+      de formateo en el editor aplica las reglas de formato directamente sobre el código.
+  • User Story #13: Descarga de snippet
+      • Estado: Funcionando.
+      • Detalle: El botón con ícono de descarga (Download) en SnippetDetail genera y descarga el archivo .ps con el contenido actual del snippet.
+  • User Story #14: Habilitar reglas de linting de un snippet
+      • Estado: Funcionando.
+      • Detalle: La pantalla /rules lista las reglas de linteo, permite activar/desactivar y configurar valores, y persistirlos en base de datos.
+
+  ──────
+  ### ⚠️ 2. User Stories PARCIALMENTE IMPLEMENTADAS
+
+  • User Story #1: Crear un nuevo snippet mediante archivo
+      • Qué funciona: La UI permite seleccionar un archivo .ps desde el menú "Load snippet from file", cargando su contenido en el modal de creación.
+      • Qué falta: El backend no valida previamente la sintaxis contra el parser al momento del guardado para rechazarlo e informar la regla incumplida con número de
+      línea y columna.
+  • User Story #2: Actualizar snippet mediante archivo
+      • Qué funciona: Se puede actualizar el contenido del snippet mediante el editor.
+      • Qué falta: No existe un botón directo en SnippetDetail de "actualizar subiendo archivo" y tampoco rechaza la actualización informando errores de parsing con
+      línea y columna.
+  • User Story #5: Visualización de todos los snippets
+      • Qué funciona: La tabla lista todos los snippets (propios y compartidos), con paginación y búsqueda por nombre.
+      • Qué falta: No están implementados en la tabla los filtros por relación de autor (owner, shared o ambos), ni los filtros/ordenamientos por lenguaje o validez
+      de linteo (el campo Conformance figura como estático/pending).
+
+  ──────
+  ### ❌ 3. User Stories PENDIENTES / NO IMPLEMENTADAS
+
+  (Como aclaraba la consigna, las historias 9, 10, 12 y 15 corresponden a etapas posteriores):
+
+  • User Story #8: Crear tests para un snippet
+      • Estado: En el backend existen los endpoints (POST /api/v1/snippets/{id}/tests), pero en la UI el modal de tests muestra el mensaje "Testing is not fully
+      implemented yet."
+  • User Story #9: Correr tests de un snippet
+      • Estado: No implementada en la UI.
+  • User Story #10: Ejecución interactiva de un snippet
+      • Estado: La ejecución estándar por lotes (botón Run) ejecuta el código de una sola vez, pero no soporta la interacción en tiempo real solicitando readInput
+      paso a paso de forma reactiva (WebSockets/SSE).
+  • User Story #12: Formatting automático de snippets (asíncrono)
+      • Estado: No implementada / En desarrollo (El backend publica el evento a Redis Streams, pero el consumidor SnippetTaskConsumer no tiene aún el flujo completo
+      para sobreescribir todos los snippets de un usuario de forma tolerante a fallos).
+  • User Story #15: Linting automático de snippets (asíncrono)
+      • Estado: No implementada (Mismo caso de procesamiento asíncrono en background).
+  • User Story #16: Testing automático de snippets
+      • Estado: No implementada en su totalidad junto con la interfaz de tests.
+
+  • User Story #7: Compartir snippet
+        • Estado: Funcionando.
+        • Detalle: El modal "Share" permite ingresar el ID/email de otro usuario, otorgar permisos de lectura a través de SnippetSearcher-AccessManager y listar los
+        usuarios con los que ya está compartido.
+
