@@ -22,6 +22,10 @@
   • User Story #14: Habilitar reglas de linting de un snippet
       • Estado: Funcionando.
       • Detalle: La pantalla /rules lista las reglas de linteo, permite activar/desactivar y configurar valores, y persistirlos en base de datos.
+  • User Story #7: Compartir snippet
+      • Estado: Funcionando.
+      • Detalle: El modal "Share" permite ingresar el ID/email de otro usuario, otorgar permisos de lectura a través de SnippetSearcher-AccessManager y listar los
+      usuarios con los que ya está compartido.
 
   ──────
   ### ⚠️ 2. User Stories PARCIALMENTE IMPLEMENTADAS
@@ -59,9 +63,4 @@
       • Estado: No implementada (Mismo caso de procesamiento asíncrono en background).
   • User Story #16: Testing automático de snippets
       • Estado: No implementada en su totalidad junto con la interfaz de tests.
-
-  • User Story #7: Compartir snippet
-        • Estado: Funcionando.
-        • Detalle: El modal "Share" permite ingresar el ID/email de otro usuario, otorgar permisos de lectura a través de SnippetSearcher-AccessManager y listar los
-        usuarios con los que ya está compartido.
 
