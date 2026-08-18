@@ -1,0 +1,93 @@
+  ### 📌 Diagnóstico General
+
+  El proyecto cuenta con una muy buena base de diseño (patrones Plugin, Strategy/Command, Factory, e interfaces delgadas y cohesivas). Sin embargo, existen
+  violaciones identificables a SRP, OCP y DIP, principalmente por:
+
+  1. Acoplamiento de versiones mediante condicionales fijos (if (version == "1.1") y when(version)).
+  2. Estructuras cerradas (enums estáticos como Actions.kt y bloques when(node.type)).
+  3. Solapamiento de responsabilidades (el Lexer asumiendo lógica sintáctica para delimitar sentencias y bloques if/else).
+  4. Dependencia de clases concretas en lugar de abstracciones en puntos clave.
+  ──────
+  ### 1. 🔍 Separación de Responsabilidades (SoC)
+
+   Componente  | ¿Qué hace bien?                                                          | ¿Dónde se desdibuja la responsabilidad?
+  -------------|--------------------------------------------------------------------------|---------------------------------------------------------------------------
+   Lexer       | Transforma texto plano (CharSource.kt) en tokens individuales (Token.kt) | Lexer.kt:47-112 asume conocimiento de gramática sintáctica (balanceo de {
+               | mediante handlers especializados (CharacterClassifier.kt,                | }, detección de else, delimitación por ;). Saber si un } va seguido de un
+               | CharacterHandler.kt).                                                    | else es responsabilidad sintáctica (Parser), no léxica.
+   Parser      | Transforma un contenedor de tokens en un árbol sintáctico (ASTNode.kt) y | Parser.kt centraliza demasiadas cosas: filtrado/formato de tokens,
+               | delega sentencias a StatementParser.kt.                                  | Shunting Yard, Pratt parsing, chequeo de tipos de funciones y parsing de
+               |                                                                          | if/else. IfStatementParser.kt es solo un pasamanos que redirige a
+               |                                                                          | parser.ifStmtParse().
+   Interpreter | Desacopla la ejecución de cada operación en clases independientes        | Interpreter.kt mezcla gestión del estado en memoria (tablas de símbolos,
+               | (ActionType.kt: Add.kt, IfStatement.kt, Print.kt, etc.).                 | scopes, constantes, tipos) con el ruteo/despacho de acciones y el control
+               |                                                                          | de versiones.
+  ──────
+  ### 2. 📐 Análisis de Principios SOLID
+
+  #### S — Single Responsibility Principle (SRP)
+
+  • Lexer: ⚠️ Parcialmente respetado. Internamente la descomposición de caracteres es limpia, pero Lexer.kt tiene dos responsabilidades: tokenizar lexemas y
+  particionar sentencias/bloques sintácticos según la versión.
+  • Parser: ⚠️ Parcialmente respetado. Aunque extrajo sentencias a StatementParser.kt, la clase Parser.kt sigue siendo un componente grande (~500 líneas) que contiene
+  algoritmos de precedencia aritmética, validaciones de funciones (isFunctionCall), resolución de bloques y soporte de if/else.
+  • Interpreter: ⚠️ Parcialmente respetado. Las acciones concretas (Add.kt, Print.kt, ReadInput.kt) cumplen SRP a la perfección. No obstante, Interpreter.kt asume la
+  gestión de memoria (symbolTable, constants), el ruteo de AST a acción, y la validación de versiones.
+  ──────
+  #### O — Open/Closed Principle (OCP)
+
+  • Lexer: ⚠️ Violaciones puntuales de OCP.
+      • Bien: La interfaz TokenPlugin.kt permite añadir nuevos reconocedores de tokens sin tocar los existentes.
+      • Violación: TokenPluginFactory.kt y CharacterClassifier.kt tienen listas estáticas cerradas. Si se añade una versión 1.2 con nuevos separadores u operadores,
+      hay que modificar esas clases y el método Lexer.kt:65.
+  • Parser: ⚠️ Violaciones puntuales de OCP.
+      • Bien: StatementParserFactory.kt y StatementParser.kt permiten registrar nuevos tipos de sentencias.
+      • Violación: El parseo de expresiones en Parser.kt está cerrado. Métodos como isFunctionCall, isLiteral, parseFunctionCall y getPrecedence tienen listas fijas
+      con when/if. Para agregar un nuevo operador (%, &&, ==) o una nueva función integrada, hay que modificar Parser.kt.
+  • Interpreter: ⚠️ Violación clara de OCP.
+      • Bien: La interfaz ActionType.kt permite crear nuevas acciones sin alterar las existentes.
+      • Violación: Interpreter.kt:131-158, el enum Actions.kt y Interpreter.kt:160 contienen estructuras when cerradas. Para añadir una nueva acción/nodo AST, es
+      obligatorio modificar el enum Actions.kt, la función determineAction y la configuración de versiones dentro de Interpreter.kt.
+
+  ──────
+  #### L — Liskov Substitution Principle (LSP)
+
+  • Cumplimiento alto: ✅
+      • TokenPlugin.kt (ExactMatchTokenPlugin.kt, RegexTokenPlugin.kt), StatementParser.kt y ActionType.kt respetan estrictamente sus contratos y son sustituibles sin
+      romper el comportamiento esperado.
+      • CharSource.kt (FileCharSource.kt, StringCharSource.kt, InputStreamCharSource.kt) se sustituyen de forma transparente.
+
+  ──────
+  #### I — Interface Segregation Principle (ISP)
+
+  • Cumplimiento excelente: ✅
+      • Todas las interfaces son pequeñas, cohesivas y no fuerzan a implementar métodos innecesarios:
+          • TokenPlugin.kt (1 método: match)
+          • CharacterHandler.kt (1 método: handle)
+          • StatementParser.kt (2 métodos: canParse, parse)
+          • ActionType.kt (1 método: interpret)
+          • InputProvider.kt (2 métodos: readInput, readEnv)
+
+
+  ──────
+  #### D — Dependency Inversion Principle (DIP)
+
+  • Lexer: ✅ Mayormente bueno (depende de abstracciones como CharSource y List<TokenPlugin>).
+  • Parser: ⚠️ Acoplamiento concreto. En StatementParser.kt:8, los parsers de sentencias dependen directamente de la clase concreta Parser.kt en lugar de una
+  abstracción (por ejemplo, ExpressionParser o ASTBuilder).
+  • Interpreter: ⚠️ Acoplamiento concreto. En ActionType.kt:6, cada acción recibe la instancia concreta de Interpreter.kt (exponiendo todo su estado interno y
+  mutaciones de variables) en lugar de una abstracción como ExecutionContext o Environment.
+  ──────
+  ### 💡 Resumen y Recomendaciones de Mejora
+
+  1. Separación Lexer / Delimitador de Sentencias:
+      • Extraer lexIntoStatements() a un componente intermedio (StatementStreamer o LexerAdapter) para que el Lexer solo emita un Sequence<Token> puro.
+  2. **Desacoplar el Interpreter del enum cerrado Actions.kt**:
+      • Reemplazar determineAction() y el mapa estático por un registro polimórfico de handlers indexado por tipo de nodo AST (DataType.kt), eliminando el enum
+      intermediario Actions.kt (tal como sugiere el propio comentario en ActionType.kt:8).
+  3. Extraer el estado del Interpreter (Environment / SymbolTable):
+      • Aislar la gestión de scopes, variables y constantes en una clase Environment que implemente una interfaz ExecutionContext.
+  4. Desacoplar StatementParser.kt del Parser.kt concreto:
+      • Pasar una interfaz más estrecha (ej. ExpressionParser) para que los parsers de sentencias no dependan de toda la implementación del parser principal.
+
+      ¿QUÉ CAMBIO PARA AGREGAR ALGO?
