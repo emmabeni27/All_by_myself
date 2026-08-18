@@ -210,9 +210,10 @@ export class ApiSnippetOperations implements SnippetOperations {
         return this.request<ExecutionStatus>(`/api/v1/snippets/${snippetId}/run/status`);
     }
 
-    registerUser(): Promise<void> {
+    registerUser(email?: string): Promise<void> {
         return this.request<void>('/api/v1/users', {
             method: 'PUT',
+            body: JSON.stringify({ email }),
         });
     }
 }

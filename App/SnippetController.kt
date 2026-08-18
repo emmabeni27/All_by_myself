@@ -328,13 +328,20 @@ class SnippetController(
      */
     @PutMapping("/users")
     @PreAuthorize("isAuthenticated()")
-    fun createUser(authentication: Authentication): ResponseEntity<Any> {
+    fun createUser(
+        authentication: Authentication,
+        @RequestBody(required = false) body: Map<String, String>?,
+    ): ResponseEntity<Any> {
         val jwt = authentication.principal as Jwt
         val userId = jwt.subject
-        val userEmail = jwt.getClaimAsString("email") ?: jwt.getClaimAsString("name") ?: userId
+        val userEmail = body?.get("email") ?: jwt.getClaimAsString("email") ?: jwt.getClaimAsString("name") ?: userId
 
         userDataRepository.save(UserData(userId, userEmail))
-        runnerClient.createUser(userId)
+        try {
+            runnerClient.createUser(userId)
+        } catch (e: Exception) {
+            // Ignorar si ya existe en Runner
+        }
         return ResponseEntity.ok().build()
     }
 

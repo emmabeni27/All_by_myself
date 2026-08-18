@@ -15,13 +15,10 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
             if (isAuthenticated && user?.sub) {
                 try {
                     await runnerService.registerUser(user.sub);
-                    await apiService.registerUser();
-                } catch (error) {
-                    if (!(error instanceof Error) || !error.message.
-                    includes("409")) {
-                        console.error('Error registering user:', error);
-                    }
-                }
+                } catch (_) {}
+                try {
+                    await apiService.registerUser(user.email);
+                } catch (_) {}
             }
         };
         registerUserOnAuth();
