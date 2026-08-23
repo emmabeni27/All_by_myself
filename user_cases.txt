@@ -19,13 +19,17 @@
   • User Story #13: Descarga de snippet
       • Estado: Funcionando.
       • Detalle: El botón con ícono de descarga (Download) en SnippetDetail genera y descarga el archivo .ps con el contenido actual del snippet.
-  • User Story #14: Habilitar reglas de linting de un snippet
+  • User Story #14: Habilitar reglas de linting de un snippet 🍁 REVISAR
       • Estado: Funcionando.
       • Detalle: La pantalla /rules lista las reglas de linteo, permite activar/desactivar y configurar valores, y persistirlos en base de datos.
-  • User Story #7: Compartir snippet
+  • User Story #7: Compartir snippet 🍁 REVISAR
       • Estado: Funcionando.
       • Detalle: El modal "Share" permite ingresar el ID/email de otro usuario, otorgar permisos de lectura a través de SnippetSearcher-AccessManager y listar los
       usuarios con los que ya está compartido.
+  • User Story #5: Visualización de todos los snippets
+      • Qué funciona: La tabla lista todos los snippets (propios y compartidos), con paginación y búsqueda por nombre.
+      • Qué falta: No están implementados en la tabla los filtros por relación de autor (owner, shared o ambos), ni los filtros/ordenamientos por lenguaje o validez
+      de linteo (el campo Conformance figura como estático/pending).
 
   ──────
   ### ⚠️ 2. User Stories PARCIALMENTE IMPLEMENTADAS
@@ -38,10 +42,7 @@
       • Qué funciona: Se puede actualizar el contenido del snippet mediante el editor.
       • Qué falta: No existe un botón directo en SnippetDetail de "actualizar subiendo archivo" y tampoco rechaza la actualización informando errores de parsing con
       línea y columna.
-  • User Story #5: Visualización de todos los snippets
-      • Qué funciona: La tabla lista todos los snippets (propios y compartidos), con paginación y búsqueda por nombre.
-      • Qué falta: No están implementados en la tabla los filtros por relación de autor (owner, shared o ambos), ni los filtros/ordenamientos por lenguaje o validez
-      de linteo (el campo Conformance figura como estático/pending).
+
 
   ──────
   ### ❌ 3. User Stories PENDIENTES / NO IMPLEMENTADAS

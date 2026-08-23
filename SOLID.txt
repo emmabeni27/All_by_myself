@@ -90,4 +90,6 @@
   4. Desacoplar StatementParser.kt del Parser.kt concreto:
       • Pasar una interfaz más estrecha (ej. ExpressionParser) para que los parsers de sentencias no dependan de toda la implementación del parser principal.
 
-      ¿QUÉ CAMBIO PARA AGREGAR ALGO?
+      ¿QUÉ CAMBIO PARA AGREGAR ALGO?ANALISIS_SENTENCIAS_LEXER.md
+
+      agy --conversation=ef28fded-619a-49bb-aad3-bbb5098f3011

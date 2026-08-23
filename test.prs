@@ -1,0 +1,13 @@
+let x: number=5;
+let name: string="John";
+let result: number=x+10;
+
+
+println(result);
+
+
+println(name);
+let y: number=100;
+
+
+println(y);
