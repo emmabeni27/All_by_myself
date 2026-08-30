@@ -1,0 +1,175 @@
+─────────────
+> mirá el repo y decime (también indicando dónde):
+  1) Están ktlint format y detekt configurados?
+  2) tinen al menos dos reglas cada uno customizadas?
+  3) están conectdos a las acciones de gradle como build, pre hook o a myPLugin pra usarse de forma automática?
+  4) El linter y formater implementados, tienen reglas rpopias?
+  5) El linter implementado, usa librerías externas paraleer cosas o está hecho full a mano 100%?
+  6) hay un pipeline de githubactions? es bueno?
+
+
+▸ Thought for 14s
+  Analyzing each question meticulously to ensure accuracy and specific references ...
+  A continuación tienes el detalle completo de cada una de las 6 preguntas analizadas en el repositorio:
+  ──────
+  ### 1) ¿Están ktlint format y detekt configurados? ¿Dónde?
+  Sí, ambos están completamente configurados.
+  • Detekt:
+      • settings.gradle:5: Se declara el plugin io.gitlab.arturbosch.detekt versión 1.23.8.
+      • build.gradle:1-3: Se aplica el plugin en la raíz.
+      • build.gradle:19: Dependencia del plugin de Detekt (io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.8).
+      • buildlogic.kotlin-myPlugin-conventions.gradle:40-44: Bloque de configuración que enlaza el archivo de reglas config/detekt/detekt.yml y activa
+      buildUponDefaultConfig = true.
+      • detekt.yml: Archivo YAML central con la configuración detallada de reglas de Detekt.
+  • Ktlint (y ktlintFormat):
+      • build.gradle:18: Dependencia del plugin org.jlleitschuh.gradle.ktlint versión 11.6.0.
+      • buildlogic.kotlin-myPlugin-conventions.gradle:3 y buildlogic.kotlin-myPlugin-conventions.gradle:77-81: Aplica el plugin y carga automáticamente el archivo .
+      editorconfig.
+      • .editorconfig: Archivo de configuración que define reglas de indentación, longitud de línea y exclusiones de Ktlint.
+  ──────
+  ### 2) ¿Tienen al menos dos reglas cada uno customizadas? ¿Dónde?
+
+  Sí, ambos cuentan con múltiples reglas personalizadas:
+  • Detekt (en detekt.yml):
+      1. detekt.yml:647-653: Modificada a 140 caracteres (en lugar de los 120 por defecto), con exclusiones de package, imports y raw strings.
+      2. detekt.yml:148-149 y detekt.yml:99-101: Umbrales de complejidad explícitamente configurados en threshold: 4.
+      3. detekt.yml:309-395: Configuración personalizada de regex para nombres de funciones, clases, parámetros y propiedades con exclusión de carpetas test.
+      4. Desactivación intencional de suites de reglas que no aplican al proyecto (como detekt.yml:54).
+  • Ktlint (en .editorconfig):
+      1. .editorconfig:7: Longitud máxima personalizada a 140 columnas.
+      2. .editorconfig:10: Desactiva específicamente 4 reglas estándar de Ktlint (no-wildcard-imports, no-consecutive-blank-lines, experimental:argument-list-wrapping,
+      import-ordering).
+      3. .editorconfig:3 y .editorconfig:4: Indentación forzada a 4 espacios.
+
+  ──────
+  ### 3) ¿Están conectados a las acciones de Gradle como build, pre hook o a myPlugin para usarse de forma automática?
+
+  Sí, están integrados en los tres niveles:
+
+  1. A myPlugin (buildlogic.kotlin-myPlugin-conventions.gradle):
+      • Todos los módulos del proyecto aplican myPlugin.
+      • En buildlogic.kotlin-myPlugin-conventions.gradle:3-4 se aplican org.jlleitschuh.gradle.ktlint y io.gitlab.arturbosch.detekt.
+  2. A tareas del ciclo de vida de Gradle:
+      • build: En buildlogic.kotlin-myPlugin-conventions.gradle:73-75 se declara:
+        tasks.named("build") {
+            dependsOn "detekt", "test"
+        }
+      Al correr ./gradlew build, se ejecuta automáticamente Detekt.
+      • test: En buildlogic.kotlin-myPlugin-conventions.gradle:63-67, la tarea test depende de installGitHook.
+  3. Al Git pre-commit hook:
+      • En build.gradle:12-28 la tarea installGitHook instala el script pre-commit.
+      • Al hacer un commit, el hook ejecuta de forma automática:
+          • ./gradlew ktlintFormat --quiet (pre-commit:5) y bloquea el commit si reescribió archivos no revisados.
+          • ./gradlew detekt (pre-commit:17) y bloquea el commit si hay violaciones de calidad.
+          • ./gradlew test (pre-commit:26).
+          • ./gradlew jacocoTestCoverageVerification (pre-commit:36).
+
+
+  ──────
+  ### 4) El linter y formatter implementados (de PrintScript), ¿tienen reglas propias?
+
+  Sí, ambos módulos tienen sus propias reglas implementadas bajo interfaces dedicadas:
+
+  • Linter de PrintScript (módulo linter, implementan LintRule.kt):
+      • IdentifierNamingRule.kt: Verifica que los identificadores cumplan con camelCase o snake_case.
+      • PrintLnRule.kt: Exige que el argumento de println sea un literal o identificador simple.
+      • ReadInputRule.kt: Exige que el argumento de readInput sea un literal o identificador.
+      • IfWithoutElseRule.kt: Valida que un if tenga rama else o termine en control de flujo.
+      • ImmutableValRule.kt: Detecta variables declaradas con var que nunca fueron reasignadas y sugiere usar val.
+  • Formatter de PrintScript (módulo formatter, implementan FormatRule.kt):
+      • Obligatorias (Mandatory):
+          • LineBreakAfterSemicolonRule.kt: Salto de línea tras punto y coma.
+          • SpaceAroundOperatorRule.kt: Espacios alrededor de operadores.
+          • SpaceBetweenTokensRule.kt: Espaciado entre tokens.
+      • Opcionales:
+          • AssignSpacingRule.kt: Espaciado alrededor de =.
+          • SpaceBeforeColonRule.kt / NoSpaceBeforeColonRule.kt: Espacio antes de :.
+          • SpaceAfterColonRule.kt / NoSpaceAfterColonRule.kt: Espacio después de :.
+          • LineBreakBeforePrintRule.kt / LineBreakAfterPrintRule.kt: Saltos de línea antes/después de println.
+          • IndentationRule.kt: Indentación dentro de bloques condicionales.
+          • IfBraceOnSameLineRule.kt / IfBraceBelowLineRule.kt: Posición de { en if.
+
+
+  ──────
+  ### 5) El linter implementado, ¿usa librerías externas para leer cosas o está hecho full a mano 100%?
+
+  • Para leer los archivos de configuración YAML: SÍ usa una librería externa. Utiliza SnakeYAML (org.yaml.snakeyaml:snakeyaml:2.2, declarada en build.gradle:10) en
+  la clase ConfigLoader.kt:3-17 para parsear el archivo de configuración a un mapa de Kotlin.
+  • Para el análisis estático y linting del código: Está hecho 100% a mano (in-house).
+      • No utiliza parsers ni linters externos.
+      • El motor Linter.kt recibe el árbol ASTNode.kt construido por el propio parser/lexer del proyecto y recorre los nodos aplicando la lógica de validación de cada
+      regla de forma manual.
+
+  ──────
+  ### 6) ¿Hay un pipeline de GitHub Actions? ¿Es bueno?
+  Sí hay un pipeline, ubicado en ci-cd.yml.
+  #### Evaluación del pipeline:
+  Es un pipeline sólido y completo para CI/CD, aunque tiene oportunidades puntuales de mejora:
+  • Aspectos positivos (lo bueno):
+      • Pipeline integral: Cubre verificación de formato (./gradlew ktlintCheck, ci-cd.yml:60), compilación, análisis estático de Detekt y tests (./gradlew build,
+      ci-cd.yml:63), verificación de cobertura de código mínima del 80% con JaCoCo (ci-cd.yml:65-71) y publicación de paquetes a GitHub Packages (ci-cd.yml:73-75).
+      • Rendimiento: Usa gradle/actions/setup-gradle@v3 para optimizar caching y acelerar las corridas.
+      • Consistencia: Utiliza Java 21 Temurin homogéneo con las toolchains de Gradle.
+  • Oportunidades de mejora:
+      1. Falta trigger en pull_request: El workflow solo se dispara con push a main (ci-cd.yml:3-6). No valida Pull Requests antes de mergear a la rama principal.
+      2. Incremento de versión deshabilitado: En el job get_version (ci-cd.yml:27-31), el incremento automático de versión semántica está comentado temporalmente
+      (#version=$(echo $version ...)).
+      3. Ocultamiento de logs: El comando ./gradlew build --continue > .git/test-output.log (ci-cd.yml:63) redirige la salida a un archivo en lugar de imprimirla en
+      la consola del Action, lo que dificulta ver directamente en GitHub qué falló si hay un error de compilación o detekt.
+────────────────────────────────────────────────────────────
+> no usa pico o alguna de esas?
+
+
+
+  No, en el código real no se utiliza Picocli ni ninguna otra librería externa de parsing de argumentos (como Clikt o Apache Commons CLI).
+
+  A pesar de que en la documentación (ARQUITECTURA_MODULAR.md:20 y MODULOS_Y_ENLACES.md:188) se menciona "Picocli" como referencia de diseño, la implementación real
+  funciona de la siguiente manera:
+
+  1. Dependencias del módulo CLI (build.gradle:19-20):
+  Solo incluye:
+      • org.jline:jline:3.26.2: para manejar la terminal, lectura de líneas y modo interactivo (REPL).
+      • kotlinx-coroutines-core: para el indicador de progreso asíncrono.
+  2. Parsing y Despacho de Comandos (Hecho 100% a mano):
+      • Se diseñó una estructura propia basada en el patrón Command:
+          • Cli.kt: Recibe la lista args: List<String>, extrae args[0] como el nombre del comando y despacha args.drop(1) al comando correspondiente.
+          • CliCommand.kt e implementaciones (ExecutionCommand.kt, AnalyzerCommand.kt, FormatterCommand.kt, ValidationCommand.kt).
+          • Los argumentos posicionales (como ruta del archivo, archivo de configuración, versión "1.0" / "1.1") se validan y extraen por índice directamente en el
+          código de cada comando (por ejemplo, en Analyzer.kt:30-55).
+
+
+────────────────────────────────────────────────────────────
+> .git/test-output.log
+
+  dónde se almacena?
+
+▸ Thought for 3s, 441 tokens
+  The file `.git/test-output.log` is written to in the `.githooks/pre-commit` scri...
+  El archivo .git/test-output.log se almacena dentro del directorio interno y oculto de Git (.git/) en la raíz del proyecto:
+
+  ### 1. Ubicación exacta:
+
+  • En tu máquina local:
+  C:\Users\laris\Downloads\Ingsis\PrintScript-Tools\.git\test-output.log
+  • En el runner de GitHub Actions (CI):
+  Dentro del workspace del contenedor/máquina virtual de Ubuntu (.../PrintScript-Tools/.git/test-output.log).
+  ──────
+  ### 2. ¿Quién lo crea y dónde se usa?
+
+  Se genera mediante redirección de salida (> .git/test-output.log) en dos lugares:
+
+  1. pre-commit:26-28:
+    if ! ./gradlew test --continue > .git/test-output.log; then
+        echo "Commit bloqueado: fallaron tests."
+        cat .git/test-output.log | grep FAILED
+        exit 1
+  Guarda el log de la ejecución de tests localmente para que, si fallan, el pre-commit hook filtre y muestre solo las líneas con FAILED.
+  2. ci-cd.yml:63:
+    - name: Build
+      run: ./gradlew build --continue > .git/test-output.log
+  Guarda la salida del ./gradlew build en el runner de GitHub Actions.
+  ──────
+  ### 3. ¿Por qué se guarda ahí?
+
+  Se utiliza la carpeta .git/ porque es un directorio especial gestionado por Git que nunca forma parte del control de versiones ni de los commits, funcionando como
+  un almacenamiento temporal de archivos temporales/logs sin necesidad de ensuciar el directorio de trabajo ni agregarlo al archivo .gitignore.
