@@ -64,4 +64,7 @@
   • User Story #16: Testing automático de snippets
       • Estado: No implementada en su totalidad junto con la interfaz de tests.
 
+ ARREGLO SERGIO REGLAS FORMATER
+ usar detekt y ajustar pipeline de ci/cd en cada microsrvicio
+
 CYPRESS
