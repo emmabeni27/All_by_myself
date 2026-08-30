@@ -30,10 +30,6 @@
       • Qué funciona: La tabla lista todos los snippets (propios y compartidos), con paginación y búsqueda por nombre.
       • Qué falta: No están implementados en la tabla los filtros por relación de autor (owner, shared o ambos), ni los filtros/ordenamientos por lenguaje o validez
       de linteo (el campo Conformance figura como estático/pending).
-
-  ──────
-  ### ⚠️ 2. User Stories PARCIALMENTE IMPLEMENTADAS
-
   • User Story #1: Crear un nuevo snippet mediante archivo
       • Qué funciona: La UI permite seleccionar un archivo .ps desde el menú "Load snippet from file", cargando su contenido en el modal de creación.
       • Qué falta: El backend no valida previamente la sintaxis contra el parser al momento del guardado para rechazarlo e informar la regla incumplida con número de
@@ -43,15 +39,18 @@
       • Qué falta: No existe un botón directo en SnippetDetail de "actualizar subiendo archivo" y tampoco rechaza la actualización informando errores de parsing con
       línea y columna.
 
+  ──────
+  ### ⚠️ 2. User Stories PARCIALMENTE IMPLEMENTADAS
+
+
+
 
   ──────
   ### ❌ 3. User Stories PENDIENTES / NO IMPLEMENTADAS
 
   (Como aclaraba la consigna, las historias 9, 10, 12 y 15 corresponden a etapas posteriores):
 
-  • User Story #8: Crear tests para un snippet
-      • Estado: En el backend existen los endpoints (POST /api/v1/snippets/{id}/tests), pero en la UI el modal de tests muestra el mensaje "Testing is not fully
-      implemented yet."
+
   • User Story #9: Correr tests de un snippet
       • Estado: No implementada en la UI.
   • User Story #10: Ejecución interactiva de un snippet
@@ -65,3 +64,4 @@
   • User Story #16: Testing automático de snippets
       • Estado: No implementada en su totalidad junto con la interfaz de tests.
 
+CYPRESS
