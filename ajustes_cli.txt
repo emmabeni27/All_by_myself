@@ -1,0 +1,56 @@
+ No, en el código real no se utiliza Picocli ni ninguna otra librería externa de parsing de argumentos (como Clikt o Apache Commons CLI).
+
+  A pesar de que en la documentación (ARQUITECTURA_MODULAR.md:20 y MODULOS_Y_ENLACES.md:188) se menciona "Picocli" como referencia de diseño, la implementación real
+  funciona de la siguiente manera:
+
+  1. Dependencias del módulo CLI (build.gradle:19-20):
+  Solo incluye:
+      • org.jline:jline:3.26.2: para manejar la terminal, lectura de líneas y modo interactivo (REPL).
+      • kotlinx-coroutines-core: para el indicador de progreso asíncrono.
+  2. Parsing y Despacho de Comandos (Hecho 100% a mano):
+      • Se diseñó una estructura propia basada en el patrón Command:
+          • Cli.kt: Recibe la lista args: List<String>, extrae args[0] como el nombre del comando y despacha args.drop(1) al comando correspondiente.
+          • CliCommand.kt e implementaciones (ExecutionCommand.kt, AnalyzerCommand.kt, FormatterCommand.kt, ValidationCommand.kt).
+          • Los argumentos posicionales (como ruta del archivo, archivo de configuración, versión "1.0" / "1.1") se validan y extraen por índice directamente en el
+          código de cada comando (por ejemplo, en Analyzer.kt:30-55).
+
+
+────────────────────────────────────────────────────────────
+> .git/test-output.log
+
+  dónde se almacena?
+
+▸ Thought for 3s, 441 tokens
+  The file `.git/test-output.log` is written to in the `.githooks/pre-commit` scri...
+  El archivo .git/test-output.log se almacena dentro del directorio interno y oculto de Git (.git/) en la raíz del proyecto:
+
+  ### 1. Ubicación exacta:
+
+  • En tu máquina local:
+  C:\Users\laris\Downloads\Ingsis\PrintScript-Tools\.git\test-output.log
+  • En el runner de GitHub Actions (CI):
+  Dentro del workspace del contenedor/máquina virtual de Ubuntu (.../PrintScript-Tools/.git/test-output.log).
+  ──────
+  ### 2. ¿Quién lo crea y dónde se usa?
+
+  Se genera mediante redirección de salida (> .git/test-output.log) en dos lugares:
+
+  1. pre-commit:26-28:
+    if ! ./gradlew test --continue > .git/test-output.log; then
+        echo "Commit bloqueado: fallaron tests."
+        cat .git/test-output.log | grep FAILED
+        exit 1
+  Guarda el log de la ejecución de tests localmente para que, si fallan, el pre-commit hook filtre y muestre solo las líneas con FAILED.
+  2. ci-cd.yml:63:
+    - name: Build
+      run: ./gradlew build --continue > .git/test-output.log
+  Guarda la salida del ./gradlew build en el runner de GitHub Actions.
+  ──────
+  ### 3. ¿Por qué se guarda ahí?
+
+  Se utiliza la carpeta .git/ porque es un directorio especial gestionado por Git que nunca forma parte del control de versiones ni de los commits, funcionando como
+  un almacenamiento temporal de archivos temporales/logs sin necesidad de ensuciar el directorio de trabajo ni agregarlo al archivo .gitignore.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

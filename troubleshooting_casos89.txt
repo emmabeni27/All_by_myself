@@ -1,0 +1,28 @@
+. Estado de la User Story #9 en la UI
+      • Problema: Se reportó como no implementada en la UI, pero la interfaz y componentes ya existían en el código base.
+      • Solución: Se auditó el código y se constató que la UI estaba desarrollada pero bloqueada por errores de integración entre servicios.
+  2. Mapeo de respuesta de tests en el Frontend (api.ts)
+      • Problema: getTestCases esperaba rígidamente un Map y rompía el mapeo de id, inputs y outputs si el backend devolvía una lista o un wrapper JSON.
+      • Solución: Se adaptó la función para procesar de forma segura listas (Array), mapas y objetos anidados normalizando los identificadores.
+  3. Payload incompleto al crear tests (api.ts)
+      • Problema: El POST de creación no enviaba el campo name ni alias comunes esperados por el backend (inputs, outputs).
+      • Solución: Se actualizaron los campos enviados en el body de createTestCase para asegurar compatibilidad total con el DTO del backend.
+  4. Fallo con JSON.parse en respuestas de texto plano (api.ts)
+      • Problema: Si el backend respondía con un ID UUID o mensaje en texto plano sin formato JSON, JSON.parse arrojaba un error de sintaxis y abortaba el flujo.
+      • Solución: Se implementó un bloque try-catch con fallback a texto plano en el método base request.
+  5. Refresco y visualización de errores en la UI (SnippetTestManager.tsx y queries.tsx)
+      • Problema: Tras crear un test la lista quedaba vacía sin refrescar y los errores del servidor se ocultaban silenciosamente.
+      • Solución: Se configuró invalidación automática en React Query, reconsulta inmediata (refetchTests) y alertas visuales con botón de reintento.
+  6. Error 500 al listar tests por QueryTypeMismatchException en el Backend (TestRepository.kt)
+      • Problema: Spring Data JPA ejecutaba findTestIdsBySnippetId retornando entidades Test pero intentando castearlas a String, arrojando 500 en GET
+      /api/v1/snippets/{id}/tests.
+      • Solución: Se agregó la anotación @Query explícita en TestRepository.kt y se utilizó findBySnippetId en SnippetController.kt.
+  7. Error 500 al correr tests por método HTTP erróneo (RunnerClient.kt)
+      • Problema: RunnerClient.runTest enviaba una petición con HttpMethod.DELETE hacia /api/v1/testing en vez de POST, provocando 405 Method Not Allowed.
+      • Solución: Se cambió la llamada a HttpMethod.POST para que coincida con el @PostMapping del Runner.
+  8. Inconsistencia de campos en el DTO de ejecución (RunTestRequest.kt)
+      • Problema: SnippetSearcher-App enviaba testId mientras que el endpoint del Runner requería obligatoriamente el campo userId: String.
+      • Solución: Se actualizó el DTO y el controlador en SnippetSearcher-App para extraer y enviar el userId autenticado.
+  9. Manejo de la salida de ejecución en el Runner (TestingJobController.kt)
+      • Problema: actual.removeLast() arrojaba NoSuchElementException si la lista de outputs terminaba vacía tras la ejecución.
+      • Solución: Se condicionó la remoción únicamente si la lista contenía elementos y el último era "Execution finished"
